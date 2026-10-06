@@ -14,6 +14,12 @@ CREATE TABLE IF NOT EXISTS users (
   fullname VARCHAR(255) NOT NULL
 );
 
+CREATE USER IF NOT EXISTS 'newsuser'@'localhost' IDENTIFIED BY 'news123';
+CREATE USER IF NOT EXISTS 'newsuser'@'127.0.0.1' IDENTIFIED BY 'news123';
+GRANT ALL PRIVILEGES ON newsdb.* TO 'newsuser'@'localhost';
+GRANT ALL PRIVILEGES ON newsdb.* TO 'newsuser'@'127.0.0.1';
+FLUSH PRIVILEGES;
+
 INSERT INTO posts(title, description)
 SELECT 'NodeJS', 'Lập trình backend với Node.js thuần'
 WHERE NOT EXISTS (SELECT 1 FROM posts WHERE title = 'NodeJS');
