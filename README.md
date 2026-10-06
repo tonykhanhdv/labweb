@@ -1,16 +1,19 @@
 # LAB 11 - Express REST API
 
-Project được dựng theo mạch Lab 9 -> Lab 10 -> Lab 11.
+Project theo mạch Lab 9 -> Lab 10 -> Lab 11.
 
-## Chạy trên GitHub Codespaces
+## Cách chạy trên GitHub Codespaces
 
-Nếu Codespace được tạo trước khi repo có thư mục .devcontainer, hãy chạy một lần:
-Ctrl + Shift + P -> Codespaces: Rebuild Container
+Repo không còn dùng custom devcontainer để tránh lỗi Recovery Mode.
 
-Sau đó chỉ cần:
+Tạo một Codespace mới từ branch main, sau đó chỉ cần:
 
+```bash
 npm install
 npm start
+```
+
+Database SQLite local sẽ tự được tạo tại `database/news.db` khi chạy `npm start`.
 
 Mở:
 - http://localhost:3000/news
@@ -18,10 +21,10 @@ Mở:
 - http://localhost:3000/api/posts
 
 Tài khoản test:
-- admin
-- 123456
+- username: admin
+- password: 123456
 
-API:
+API Lab 11:
 - GET /api/posts
 - GET /api/posts/:id
 - GET /api/posts/search?keyword=node
