@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng nhập</title>
+</head>
+<body>
+  <h1>Đăng nhập</h1>
+  <% if (message) { %><p><%= message %></p><% } %>
+  <form method="POST" action="/login">
+    <div><input name="username" placeholder="Username"></div>
+    <div><input name="password" type="password" placeholder="Password"></div>
+    <button type="submit">Đăng nhập</button>
+  </form>
+</body>
+</html>
