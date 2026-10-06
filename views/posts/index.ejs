@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Danh sách bài viết</title>
+</head>
+<body>
+  <h1>Danh sách bài viết</h1>
+  <% if (user) { %>
+    <p>Xin chào <strong><%= user.fullname %></strong></p>
+    <form method="POST" action="/logout"><button>Đăng xuất</button></form>
+  <% } else { %>
+    <p><a href="/login">Đăng nhập</a></p>
+  <% } %>
+  <ul>
+    <% posts.forEach(post => { %>
+      <li><strong><%= post.title %></strong> - <%= post.description %></li>
+    <% }) %>
+  </ul>
+</body>
+</html>
