@@ -1,41 +1,65 @@
 const db = require("../config/db");
 
+function all(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+
+function get(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
+function run(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) reject(err);
+      else resolve(this);
+    });
+  });
+}
+
 async function getAllPosts() {
-  const [rows] = await db.query("SELECT * FROM posts ORDER BY id ASC");
-  return rows;
+  return all("SELECT * FROM posts ORDER BY id ASC");
 }
 
 async function getPostById(id) {
-  const [rows] = await db.query("SELECT * FROM posts WHERE id = ?", [id]);
-  return rows[0];
+  return get("SELECT * FROM posts WHERE id = ?", [id]);
 }
 
 async function searchPosts(keyword) {
   const value = `%${keyword}%`;
-  const [rows] = await db.query(
+  return all(
     "SELECT * FROM posts WHERE title LIKE ? OR description LIKE ? ORDER BY id ASC",
     [value, value]
   );
-  return rows;
 }
 
 async function createPost(title, description) {
-  const [result] = await db.query(
+  const result = await run(
     "INSERT INTO posts(title, description) VALUES (?, ?)",
     [title, description]
   );
-  return result.insertId;
+  return result.lastID;
 }
 
 async function updatePost(id, title, description) {
-  await db.query(
+  return run(
     "UPDATE posts SET title = ?, description = ? WHERE id = ?",
     [title, description, id]
   );
 }
 
 async function deletePost(id) {
-  await db.query("DELETE FROM posts WHERE id = ?", [id]);
+  return run("DELETE FROM posts WHERE id = ?", [id]);
 }
 
 module.exports = {
