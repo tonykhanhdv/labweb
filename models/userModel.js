@@ -1,11 +1,19 @@
 const db = require("../config/db");
 
+function get(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
 async function findUserByUsernameAndPassword(username, password) {
-  const [rows] = await db.query(
+  return get(
     "SELECT * FROM users WHERE username = ? AND password = ?",
     [username, password]
   );
-  return rows[0];
 }
 
 module.exports = {
