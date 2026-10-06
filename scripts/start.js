@@ -1,63 +1,75 @@
 const { execFileSync, spawn } = require("child_process");
-const fs = require("fs");
 const path = require("path");
 
-function commandExists(cmd) {
+function run(command, options = {}) {
+  execFileSync("bash", ["-lc", command], {
+    stdio: options.quiet ? "ignore" : "inherit"
+  });
+}
+
+function exists(command) {
   try {
-    execFileSync("bash", ["-lc", `command -v ${cmd}`], { stdio: "ignore" });
+    run(`command -v ${command}`, { quiet: true });
     return true;
   } catch {
     return false;
   }
 }
 
-function run(cmd) {
-  execFileSync("bash", ["-lc", cmd], { stdio: "inherit" });
-}
-
-function waitMysql() {
-  for (let i = 0; i < 40; i++) {
+function waitDatabase() {
+  for (let i = 0; i < 30; i++) {
     try {
-      execFileSync("bash", ["-lc", "mysqladmin ping -uroot -p123456 --silent"], { stdio: "ignore" });
+      run("sudo mariadb-admin ping --silent", { quiet: true });
       return true;
-    } catch {}
-    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
+    } catch {
+      try {
+        run("sudo mysqladmin ping --silent", { quiet: true });
+        return true;
+      } catch {}
+    }
+    run("sleep 1", { quiet: true });
   }
   return false;
 }
 
-if (!commandExists("mysqld")) {
-  console.log("MySQL chưa có trong môi trường.");
-  console.log("Nếu dùng GitHub Codespaces, hãy Rebuild Container để .devcontainer cài MySQL.");
-  process.exit(1);
-}
-
 try {
-  run("sudo service mysql start || sudo service mariadb start || true");
-} catch {}
-
-if (!waitMysql()) {
-  console.log("Không khởi động được MySQL.");
-  process.exit(1);
-}
-
-try {
-  run("mysql -uroot -p123456 < database/init.sql");
-} catch {
-  console.log("Không import được database/init.sql");
-  process.exit(1);
-}
-
-const child = spawn(process.execPath, [path.join(__dirname, "..", "app.js")], {
-  stdio: "inherit",
-  env: {
-    ...process.env,
-    DB_HOST: process.env.DB_HOST || "127.0.0.1",
-    DB_PORT: process.env.DB_PORT || "3306",
-    DB_USER: process.env.DB_USER || "root",
-    DB_PASSWORD: process.env.DB_PASSWORD || "123456",
-    DB_NAME: process.env.DB_NAME || "newsdb"
+  if (!exists("mariadb") && !exists("mysql")) {
+    console.log("Lần chạy đầu: đang cài MariaDB cho Codespaces...");
+    run("sudo apt-get update");
+    run("sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server mariadb-client");
   }
-});
 
-child.on("exit", code => process.exit(code ?? 0));
+  console.log("Đang khởi động database...");
+  run("sudo service mariadb start || sudo service mysql start || true", { quiet: true });
+
+  if (!waitDatabase()) {
+    throw new Error("Database không khởi động được");
+  }
+
+  console.log("Đang tạo database và dữ liệu Lab 11...");
+  if (exists("mariadb")) {
+    run("sudo mariadb < database/init.sql", { quiet: true });
+  } else {
+    run("sudo mysql < database/init.sql", { quiet: true });
+  }
+
+  console.log("Database sẵn sàng.");
+  console.log("Khởi động Express...");
+
+  const child = spawn(process.execPath, [path.join(__dirname, "..", "app.js")], {
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      DB_HOST: process.env.DB_HOST || "127.0.0.1",
+      DB_PORT: process.env.DB_PORT || "3306",
+      DB_USER: process.env.DB_USER || "newsuser",
+      DB_PASSWORD: process.env.DB_PASSWORD || "news123",
+      DB_NAME: process.env.DB_NAME || "newsdb"
+    }
+  });
+
+  child.on("exit", code => process.exit(code ?? 0));
+} catch (error) {
+  console.error("\nKhông thể khởi động project:", error.message);
+  process.exit(1);
+}
